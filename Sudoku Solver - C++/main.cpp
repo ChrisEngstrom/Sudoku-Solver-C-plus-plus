@@ -15,7 +15,8 @@ int main () {
 		 gameBoard[9][9];
 	int rowCount = 0;
 
-	ifstream inFile("sudokuInput.txt");
+	ifstream inFile;
+	inFile.open("sudokuInput.txt");
 	ofstream outFile;
 	outFile.open("sudokuOutput.txt", ios::out | ios::trunc);
 
