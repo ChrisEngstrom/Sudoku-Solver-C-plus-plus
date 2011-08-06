@@ -74,8 +74,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <None Include="puzzleInput.txt" />
     <None Include="puzzleOutput.txt" />
+    <None Include="sudokuInput.txt" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />

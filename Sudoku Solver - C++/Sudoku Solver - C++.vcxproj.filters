@@ -15,10 +15,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="puzzleInput.txt">
+    <None Include="puzzleOutput.txt">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="puzzleOutput.txt">
+    <None Include="sudokuInput.txt">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>
