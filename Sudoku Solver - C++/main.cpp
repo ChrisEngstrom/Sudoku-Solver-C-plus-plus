@@ -11,21 +11,24 @@ using namespace std;
 
 int main () {
 
-	char buffer[18],
-		 gameBoard[9][9];
-	int rowCount = 0;
+	const int BUFFER_SIZE = 19;
+	char buffer[BUFFER_SIZE];
+	int rowCount = 0,
+		gameBoard[9][9],
+		numberCount[9] = {0};
 
 	ifstream inFile("sudokuInput.txt");
 
 	ofstream outFile("sudokuOutput.txt", ios::trunc);
 
-	// Read first line of the inFile
-	inFile.getline(buffer, 17, '\n');
-
 	if(!inFile)
 		cout << "Cannot locate file." << endl;
 	else
 	{
+
+	// Read first line of the inFile
+	inFile.getline(buffer, BUFFER_SIZE, '\n');
+
 		while(!inFile.eof())
 		{
 			int bufferIndex = 0,
@@ -33,19 +36,24 @@ int main () {
 
 			cout << buffer << endl;
 
-			while(buffer[bufferIndex] != '\n')
+			while(buffer[bufferIndex] != ';')
 			{
-				//***************
-				//* skip spaces *
-				//***************
-				while(buffer[bufferIndex] == ' ' && buffer[bufferIndex] != '\n')
+				// Skip spaces
+				while(buffer[bufferIndex] == ' ' && buffer[bufferIndex] != ';')
 				{
 					bufferIndex++;
 				}
 
-				if(buffer[bufferIndex] != '\n')
+				if(buffer[bufferIndex] != ';')
 				{
-					gameBoard[rowCount][columnIndex] = buffer[bufferIndex];
+					int currentNumber = buffer[bufferIndex] - '0';
+
+					if(currentNumber != 0)
+					{
+						numberCount[currentNumber - 1]++;
+					}
+
+					gameBoard[rowCount][columnIndex] = currentNumber;
 					columnIndex++;
 					bufferIndex++;
 				}
@@ -53,7 +61,7 @@ int main () {
 
 			outFile << buffer << endl;
 
-			inFile.getline(buffer, 17, '\n');
+			inFile.getline(buffer, BUFFER_SIZE, '\n');
 			rowCount++;
 		}
 
@@ -64,19 +72,23 @@ int main () {
 		{
 			for(int column = 0; column < 9; column++)
 			{
+				// Output the cell number
 				cout << gameBoard[row][column];
 
+				// Space the numbers out so the board is easier to read
 				if(column != 8)
 				{
 					cout << ' ';
 				}
 
+				// Separate the three vertical sections
 				if(!((column + 1) % 3) && column != 8)
 				{
 					cout << "| ";
 				}
 			}
 
+			// Separate the three horizontal sections
 			if(!((row + 1) % 3) && row != 8)
 			{
 				cout << endl << "---------------------";
@@ -84,6 +96,23 @@ int main () {
 
 			cout << endl;
 		}
+
+		// Display the number counts
+		cout << endl << endl
+			 << " 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9" << endl
+			 << "----------------------------------" << endl;
+
+		for(int number = 0; number < 9; number++)
+		{
+			cout  << ' ' << numberCount[number];
+
+			if(number != 8)
+			{
+				cout << " |";
+			}
+		}
+
+		cout << endl;
 		
 		// Close the input file
 		inFile.close();

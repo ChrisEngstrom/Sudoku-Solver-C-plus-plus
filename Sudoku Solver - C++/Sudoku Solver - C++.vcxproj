@@ -77,7 +77,9 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="startAndSolution.txt" />
     <None Include="sudokuInput.txt" />
+    <None Include="sudokuOutput.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -23,5 +23,11 @@
     <None Include="sudokuInput.txt">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="sudokuOutput.txt">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="startAndSolution.txt">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>
