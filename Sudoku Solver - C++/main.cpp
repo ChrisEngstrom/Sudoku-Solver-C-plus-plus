@@ -15,10 +15,9 @@ int main () {
 		 gameBoard[9][9];
 	int rowCount = 0;
 
-	ifstream inFile;
-	inFile.open("sudokuInput.txt");
-	ofstream outFile;
-	outFile.open("sudokuOutput.txt", ios::out | ios::trunc);
+	ifstream inFile("sudokuInput.txt");
+
+	ofstream outFile("sudokuOutput.txt", ios::trunc);
 
 	// Read first line of the inFile
 	inFile.getline(buffer, 17, '\n');
@@ -86,8 +85,12 @@ int main () {
 			cout << endl;
 		}
 		
-
+		// Close the input file
+		inFile.close();
 	}
+
+	// Close the output file
+	outFile.close();
 
 	return 0;
 }
