@@ -9,20 +9,31 @@
 
 using namespace std;
 
+// Constants
+const int BUFFER_SIZE = 81;
 const int SUDOKU_SIZE = 9;
+const int TOTAL_CELLS = 81;
 
 void printGameBoard(int gameBoardArray[][SUDOKU_SIZE]);
 void printNumberCount(int numberCountArray[], int &numsRemaining);
+void printPossibleNumbers(bool possibleNumsArray[][SUDOKU_SIZE]);
 void findNextNumber(int gameBoardArray[][SUDOKU_SIZE], int numberCountArray[], int &numsRemaining);
 
 int main ()
 {
-	const int BUFFER_SIZE = 19;
-	char buffer[BUFFER_SIZE];
-	int numbersRemaining = 81,
-		rowCount = 0,
+	char buffer[BUFFER_SIZE];									// Char array to store current line from the input file
+	int cellsRemaining = TOTAL_CELLS,							// Total number of cells remaining that need to be solved											
 		gameBoard[SUDOKU_SIZE][SUDOKU_SIZE],
 		numberCount[SUDOKU_SIZE] = {0};
+	bool possibleNumbers[TOTAL_CELLS][SUDOKU_SIZE];				// Parallel array to gameBoard with possible numbers as booleans
+
+	for(int i = 0; i < TOTAL_CELLS; i++)
+	{
+		for(int j = 0; j < SUDOKU_SIZE; j++)
+		{
+			possibleNumbers[i][j] = true;
+		}
+	}
 
 	ifstream inFile("sudokuInput.txt");
 
@@ -35,13 +46,13 @@ int main ()
 		// Read first line of the inFile
 		inFile.getline(buffer, BUFFER_SIZE, '\n');
 
+		int cellIndex = 0,
+			rowCount = 0;
+
 		while(!inFile.eof())
 		{
 			int bufferIndex = 0,
 				columnIndex = 0;
-
-			// Display this line of the original input
-			cout << buffer << endl;
 
 			// Process until we hit the end of the current line
 			while(buffer[bufferIndex] != ';')
@@ -63,11 +74,20 @@ int main ()
 					{
 						numberCount[currentNumber - 1]++;
 
-						numbersRemaining--;
+						for(int i = 0; i < SUDOKU_SIZE; i++)
+						{
+							if(i != currentNumber - 1)
+							{
+								possibleNumbers[cellIndex][i] = false;
+							}
+						}
+
+						cellsRemaining--;
 					}
 
 					gameBoard[rowCount][columnIndex] = currentNumber;
 					columnIndex++;
+					cellIndex++;
 					bufferIndex++;
 				}
 			}
@@ -77,20 +97,21 @@ int main ()
 			inFile.getline(buffer, BUFFER_SIZE, '\n');
 			rowCount++;
 		}
-		
+
 		// Close the input file
 		inFile.close();
 	}
 
 	// Solve the puzzle until no numbers remain to be found
-	while(numbersRemaining != 0)
-	{
-		findNextNumber(gameBoard, numberCount, numbersRemaining);
+	//while(numbersRemaining != 0)
+	//{
+		findNextNumber(gameBoard, numberCount, cellsRemaining);
 
 		// Print the current state
 		printGameBoard(gameBoard);
-		printNumberCount(numberCount, numbersRemaining);
-	}
+		printNumberCount(numberCount, cellsRemaining);
+		printPossibleNumbers(possibleNumbers);
+	//}
 
 	// Close the output file
 	outFile.close();
@@ -136,8 +157,8 @@ void printGameBoard(int gameBoardArray[][SUDOKU_SIZE])
 void printNumberCount(int numberCountArray[], int &numsRemaining)
 {
 	cout << endl << endl
-			<< " 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9" << endl
-			<< "----------------------------------" << endl;
+		 << " 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9" << endl
+		 << "----------------------------------" << endl;
 
 	for(int number = 0; number < SUDOKU_SIZE; number++)
 	{
@@ -150,8 +171,36 @@ void printNumberCount(int numberCountArray[], int &numsRemaining)
 	}
 
 	cout << endl << endl
-		 << "Numbers found: " << (81 - numsRemaining) << endl
+		 << "Numbers found: " << (TOTAL_CELLS - numsRemaining) << endl
 		 << "Numbers remaining: " << numsRemaining << endl;
+}
+
+void printPossibleNumbers(bool possibleNumsArray[][SUDOKU_SIZE])
+{
+	cout << endl;
+
+	// Go through each cell of the sudoku
+	for(int cell = 0; cell < TOTAL_CELLS; cell++)
+	{
+		if((cell + 1) < 10)
+		{
+			cout << " ";
+		}
+
+		cout << (cell + 1) << ": ";
+
+		// Go through each number possibility for the current cell
+		for(int possibleNumber = 0; possibleNumber < SUDOKU_SIZE; possibleNumber++)
+		{
+			// Check to see if the current number is still a possibility
+			if(possibleNumsArray[cell][possibleNumber])
+			{
+				cout << (possibleNumber + 1) << ' ';
+			}
+		}
+
+		cout << endl;
+	}
 }
 
 // Find the next number in the puzzle
