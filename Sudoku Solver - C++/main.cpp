@@ -1,6 +1,6 @@
 ///////////////////////////
-///	  Chris Engstrom	///
-///	 Sudoku Solver C++	///
+///   Chris Engstrom    ///
+///  Sudoku Solver C++  ///
 ///////////////////////////
 
 #include <iostream>
@@ -17,6 +17,10 @@ const int TOTAL_CELLS = 81;
 void printGameBoard(int gameBoardArray[][SUDOKU_SIZE]);
 void printNumberCount(int numberCountArray[], int &numsRemaining);
 void printPossibleNumbers(bool possibleNumsArray[][SUDOKU_SIZE]);
+
+void eliminateKnownNumbers(int gameBoardArray[][SUDOKU_SIZE], bool possibleNumsArray[][SUDOKU_SIZE]);
+void clearSolvedNumFromRow(bool possibleNumsArray[][SUDOKU_SIZE], int currentRow, int currentCell, int cellValue);
+void clearSolvedNumFromColumn(bool possibleNumsArray[][SUDOKU_SIZE], int currentColumn, int currentCell, int cellValue);
 void findNextNumber(int gameBoardArray[][SUDOKU_SIZE], int numberCountArray[], int &numsRemaining);
 
 int main ()
@@ -105,6 +109,8 @@ int main ()
 	// Solve the puzzle until no numbers remain to be found
 	//while(numbersRemaining != 0)
 	//{
+		eliminateKnownNumbers(gameBoard, possibleNumbers);
+
 		findNextNumber(gameBoard, numberCount, cellsRemaining);
 
 		// Print the current state
@@ -200,6 +206,81 @@ void printPossibleNumbers(bool possibleNumsArray[][SUDOKU_SIZE])
 		}
 
 		cout << endl;
+	}
+}
+
+// Remove known numbers from their corresponding row and column
+void eliminateKnownNumbers(int gameBoardArray[][SUDOKU_SIZE], bool possibleNumsArray[][SUDOKU_SIZE])
+{
+	int currentCell = 0;	// Keep track of the current cell to use in the possibleNumsArray
+
+	// Go through the whole game board
+	for(int row = 0; row < SUDOKU_SIZE; row++)
+	{
+		for(int column = 0; column < SUDOKU_SIZE; column++)
+		{
+			// Find all the cells that are solved
+			if(gameBoardArray[row][column] != 0)
+			{
+				int cellValue = gameBoardArray[row][column];
+				
+				// Remove number from current row
+				clearSolvedNumFromRow(possibleNumsArray, row, currentCell, cellValue);
+
+				// Remove number from current column
+				clearSolvedNumFromColumn(possibleNumsArray, column, currentCell, cellValue);
+
+				// Remove this number as a possible number from the current 3x3 block
+				int blockTopRow = row - (row % 3);
+				int blockLeftColumn = column - (column % 3);
+				for(int i = blockTopRow; i < (blockTopRow + 3); i++)
+				{
+					for(int j = blockLeftColumn; j < (blockLeftColumn + 3); j++)
+					{
+
+
+						if(((SUDOKU_SIZE * i) + j) != currentCell)
+						{
+							possibleNumsArray[((SUDOKU_SIZE * i) + j)][cellValue - 1] = false;
+						}
+					}
+				}
+			}
+
+			currentCell++;
+		}
+	}
+}
+
+// Remove a solved number as a possible number from the current row
+void clearSolvedNumFromRow(bool possibleNumsArray[][SUDOKU_SIZE], int currentRow, int currentCell, int cellValue)
+{
+	int currentRowPosition = currentRow * SUDOKU_SIZE;
+
+	for(int i = 0; i < SUDOKU_SIZE; i++)
+	{
+		if(currentRowPosition != currentCell)
+		{
+			possibleNumsArray[currentRowPosition][cellValue - 1] = false;
+		}
+
+		currentRowPosition++;
+	}
+}
+
+// Remove a solved number as a possible number from the current column
+void clearSolvedNumFromColumn(bool possibleNumsArray[][SUDOKU_SIZE], int currentColumn, int currentCell, int cellValue)
+{
+	int currentColumnPosition = currentColumn % SUDOKU_SIZE;
+
+	for(int i = 0; i < SUDOKU_SIZE; i++)
+	{
+		if(currentColumnPosition != currentCell)
+		{
+			possibleNumsArray[currentColumnPosition][cellValue - 1] = false;
+		}
+
+		currentColumnPosition += 9;
 	}
 }
 
