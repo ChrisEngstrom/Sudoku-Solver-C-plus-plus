@@ -78,6 +78,7 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="puzzleDifficultySamples.txt" />
     <None Include="startAndSolution.txt" />
     <None Include="sudokuInput.txt" />
     <None Include="sudokuOutput.txt" />

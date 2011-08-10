@@ -14,23 +14,33 @@ const int BUFFER_SIZE = 81;
 const int SUDOKU_SIZE = 9;
 const int TOTAL_CELLS = 81;
 
+// Printing functions
 void printGameBoard(int gameBoardArray[][SUDOKU_SIZE]);
 void printNumberCount(int numberCountArray[], int &numsRemaining);
 void printPossibleNumbers(bool possibleNumsArray[][SUDOKU_SIZE]);
 
+// Solving functions
 void eliminateKnownNumbers(int gameBoardArray[][SUDOKU_SIZE], bool possibleNumsArray[][SUDOKU_SIZE]);
 void clearSolvedNumFromRow(bool possibleNumsArray[][SUDOKU_SIZE], int currentRow, int currentCell, int cellValue);
 void clearSolvedNumFromColumn(bool possibleNumsArray[][SUDOKU_SIZE], int currentColumn, int currentCell, int cellValue);
+void clearSolvedNumFromBlock(bool possibleNumsArray[][SUDOKU_SIZE], int currentRow, int currentColumn, int currentCell, int cellValue);
 void findNextNumber(int gameBoardArray[][SUDOKU_SIZE], int numberCountArray[], int &numsRemaining);
+
+// Maintenance functions
+int markCellsAsSolved(int gameBoardArray[][SUDOKU_SIZE], bool possibleNumsArray[][SUDOKU_SIZE], int numberCountArray[]);
 
 int main ()
 {
 	char buffer[BUFFER_SIZE];									// Char array to store current line from the input file
 	int cellsRemaining = TOTAL_CELLS,							// Total number of cells remaining that need to be solved											
-		gameBoard[SUDOKU_SIZE][SUDOKU_SIZE],
-		numberCount[SUDOKU_SIZE] = {0};
-	bool possibleNumbers[TOTAL_CELLS][SUDOKU_SIZE];				// Parallel array to gameBoard with possible numbers as booleans
+		gameBoard[SUDOKU_SIZE][SUDOKU_SIZE],					// Array to hold the current game board contents
+		numberCount[SUDOKU_SIZE] = {0},
+		numberOfCellsSolved = 0,
+		passesCount = 0;										// Holds the number of passes the program takes to solve the sudoku
+	bool possibleNumbers[TOTAL_CELLS][SUDOKU_SIZE] = {true},	// Parallel array to gameBoard with possible numbers as booleans: true = still a possibility
+		 solvedCells[TOTAL_CELLS] = {false};					// Parallel array to keep track of what cells have been solved: false = unsolved
 
+	// Initialize possibleNumbers[][] to true to show all the numbers are still possible in all the cells
 	for(int i = 0; i < TOTAL_CELLS; i++)
 	{
 		for(int j = 0; j < SUDOKU_SIZE; j++)
@@ -106,18 +116,41 @@ int main ()
 		inFile.close();
 	}
 
-	// Solve the puzzle until no numbers remain to be found
-	//while(numbersRemaining != 0)
-	//{
+	// Print the current state
+	printGameBoard(gameBoard);
+	printNumberCount(numberCount, cellsRemaining);
+
+	// Solve cells until either all are solved or until using the basic methods can't solve any more
+	do 
+	{
+		numberOfCellsSolved = 0;
+
+		passesCount++;
+
 		eliminateKnownNumbers(gameBoard, possibleNumbers);
 
-		findNextNumber(gameBoard, numberCount, cellsRemaining);
+		numberOfCellsSolved = markCellsAsSolved(gameBoard, possibleNumbers, numberCount);
+
+		cellsRemaining -= numberOfCellsSolved;
+
+		//findNextNumber(gameBoard, numberCount, cellsRemaining);
 
 		// Print the current state
 		printGameBoard(gameBoard);
+
+		cout << endl << endl
+			<< "Pass #: " << passesCount << endl << endl
+			 << "Cells solved this pass: " << numberOfCellsSolved;
+
 		printNumberCount(numberCount, cellsRemaining);
-		printPossibleNumbers(possibleNumbers);
-	//}
+		//printPossibleNumbers(possibleNumbers);
+	} while ((numberOfCellsSolved > 0) && (cellsRemaining > 0));
+
+	if(cellsRemaining > 0)
+	{
+		cout << endl << endl
+			 << "Not all of the cells were solved using the basic methods." << endl;
+	}
 
 	// Close the output file
 	outFile.close();
@@ -230,21 +263,8 @@ void eliminateKnownNumbers(int gameBoardArray[][SUDOKU_SIZE], bool possibleNumsA
 				// Remove number from current column
 				clearSolvedNumFromColumn(possibleNumsArray, column, currentCell, cellValue);
 
-				// Remove this number as a possible number from the current 3x3 block
-				int blockTopRow = row - (row % 3);
-				int blockLeftColumn = column - (column % 3);
-				for(int i = blockTopRow; i < (blockTopRow + 3); i++)
-				{
-					for(int j = blockLeftColumn; j < (blockLeftColumn + 3); j++)
-					{
-
-
-						if(((SUDOKU_SIZE * i) + j) != currentCell)
-						{
-							possibleNumsArray[((SUDOKU_SIZE * i) + j)][cellValue - 1] = false;
-						}
-					}
-				}
+				// Remove number from current 3x3 block
+				clearSolvedNumFromBlock(possibleNumsArray, row, column, currentCell, cellValue);
 			}
 
 			currentCell++;
@@ -282,6 +302,73 @@ void clearSolvedNumFromColumn(bool possibleNumsArray[][SUDOKU_SIZE], int current
 
 		currentColumnPosition += 9;
 	}
+}
+
+// Remove a solved number as a possible number from the current 3x3 block
+void clearSolvedNumFromBlock(bool possibleNumsArray[][SUDOKU_SIZE], int currentRow, int currentColumn, int currentCell, int cellValue)
+{
+	int blockTopRow = currentRow - (currentRow % 3);
+	int blockLeftColumn = currentColumn - (currentColumn % 3);
+
+	for(int i = blockTopRow; i < (blockTopRow + 3); i++)
+	{
+		for(int j = blockLeftColumn; j < (blockLeftColumn + 3); j++)
+		{
+			if(((SUDOKU_SIZE * i) + j) != currentCell)
+			{
+				possibleNumsArray[((SUDOKU_SIZE * i) + j)][cellValue - 1] = false;
+			}
+		}
+	}
+}
+
+int markCellsAsSolved(int gameBoardArray[][SUDOKU_SIZE], bool possibleNumsArray[][SUDOKU_SIZE], int numberCountArray[])
+{
+	int cellsSolved = 0,
+		currentPosition = 0,
+		possibleNumCount,
+		solvedCellValue = 0;
+
+	// Traverse the whole game board
+	for(int row = 0; row < SUDOKU_SIZE; row++)
+	{
+		for(int column = 0; column < SUDOKU_SIZE; column++)
+		{
+			// Only concentrate on the cells that are currently unsolved
+			if(gameBoardArray[row][column] == 0)
+			{
+				possibleNumCount = 0;
+
+				// Get the number of the current position
+				currentPosition = ((SUDOKU_SIZE * row) + column);
+
+				// Traverse through each bool in possibleNumsArray for that cell position
+				int i = 0;
+				while((possibleNumCount < 2) && (i < SUDOKU_SIZE))
+				{
+					if(possibleNumsArray[currentPosition][i] == true)
+					{
+						solvedCellValue = i + 1;
+						possibleNumCount++;
+					}
+
+					i++;
+				}
+
+				// If there is only one value remaining, that is the solution to the cell
+				if(possibleNumCount == 1)
+				{
+					gameBoardArray[row][column] = solvedCellValue;
+
+					numberCountArray[solvedCellValue - 1]++;
+
+					cellsSolved++;
+				}
+			}
+		}
+	}
+
+	return cellsSolved;
 }
 
 // Find the next number in the puzzle
