@@ -25,6 +25,7 @@ void eliminateKnownNumbers(int gameBoardArray[][SUDOKU_SIZE], bool possibleNumsA
 void clearSolvedNumFromRow(bool possibleNumsArray[][SUDOKU_SIZE], int currentRow, int currentCell, int cellValue);
 void clearSolvedNumFromColumn(bool possibleNumsArray[][SUDOKU_SIZE], int currentColumn, int currentCell, int cellValue);
 void clearSolvedNumFromBlock(bool possibleNumsArray[][SUDOKU_SIZE], int currentRow, int currentColumn, int currentCell, int cellValue);
+void findOnlyPossibleNumbers(int gameBoardArray[][SUDOKU_SIZE], bool possibleNumsArray[][SUDOKU_SIZE]);
 void findNextNumber(int gameBoardArray[][SUDOKU_SIZE], int numberCountArray[], int &numsRemaining);
 
 // Maintenance functions
@@ -36,7 +37,7 @@ int main ()
 	int cellsRemaining = TOTAL_CELLS,							// Total number of cells remaining that need to be solved											
 		gameBoard[SUDOKU_SIZE][SUDOKU_SIZE],					// Array to hold the current game board contents
 		numberCount[SUDOKU_SIZE] = {0},							// Array to hold the count of each individual number solved in the puzzle
-		numberOfCellsSolved = 0,
+		numberOfCellsSolved = 0,								// Holds the total number of cells that have been solved
 		passesCount = 0;										// Holds the number of passes the program takes to solve the sudoku (for informational purposes only)
 	bool possibleNumbers[TOTAL_CELLS][SUDOKU_SIZE];				// Parallel array to gameBoard with possible numbers as booleans: true = still a possibility
 
@@ -141,6 +142,9 @@ int main ()
 		// Remove numbers no longer possible in all the game board cells
 		eliminateKnownNumbers(gameBoard, possibleNumbers);
 
+		// Check possibleNumbers to see if there is a number that is the only one possible in that block
+		findOnlyPossibleNumbers(gameBoard, possibleNumbers);
+
 		// Check the possibleNumbers and place solved numbers on the gameBoard while counting
 		//	how many have been placed. Return that number to keep track of whether any numbers
 		//	had been solved or not.
@@ -168,6 +172,8 @@ int main ()
 	{
 		cout << "Not all of the cells were solved using the current methods." << endl;
 	}
+
+	printPossibleNumbers(possibleNumbers);
 
 	// Print the final state of the board to the output file
 	printGameBoard(gameBoard, outFile);
@@ -280,12 +286,12 @@ void printPossibleNumbers(bool possibleNumsArray[][SUDOKU_SIZE])
 	// Go through each cell of the sudoku
 	for(int cell = 0; cell < TOTAL_CELLS; cell++)
 	{
-		if((cell + 1) < 10)
+		if((cell + 1) < 11)
 		{
 			cout << " ";
 		}
 
-		cout << (cell + 1) << ": ";
+		cout << cell << ": ";
 
 		// Go through each number possibility for the current cell
 		for(int possibleNumber = 0; possibleNumber < SUDOKU_SIZE; possibleNumber++)
@@ -385,8 +391,10 @@ void clearSolvedNumFromBlock(bool possibleNumsArray[][SUDOKU_SIZE], int currentR
 	{
 		for(int j = blockLeftColumn; j < (blockLeftColumn + 3); j++)
 		{
+			int currentCellPosition = (SUDOKU_SIZE * i) + j;
+
 			// Go to every cell that isn't the current cell
-			if(((SUDOKU_SIZE * i) + j) != currentCell)
+			if(currentCellPosition != currentCell)
 			{
 				// Remove the number as a possibility for that cell
 				possibleNumsArray[((SUDOKU_SIZE * i) + j)][cellValue - 1] = false;
@@ -395,6 +403,73 @@ void clearSolvedNumFromBlock(bool possibleNumsArray[][SUDOKU_SIZE], int currentR
 	}
 }
 
+void findOnlyPossibleNumbers(int gameBoardArray[][SUDOKU_SIZE], bool possibleNumsArray[][SUDOKU_SIZE])
+{
+	int blockNumberCount[SUDOKU_SIZE] = {0},	// Keep track of the number of possible numbers in the block
+		numberPosition[SUDOKU_SIZE] = {0};		// Parallel array to hold the position of the last number entered into blockNumberCount
+
+	// Go to the top left cell of each 3x3 block
+	for(int row = 0; row < SUDOKU_SIZE; row += 3)
+	{
+		for(int column = 0; column < SUDOKU_SIZE; column += 3)
+		{
+			// Reset the counts and positions to 0 for this block
+			for(int k = 0; k < SUDOKU_SIZE; k++)
+			{
+				blockNumberCount[k] = 0;
+				numberPosition[k] = 0;
+			}
+
+			// Traverse through each cell in the 3x3 block
+			for(int i = row; i < (row + 3); i++)
+			{
+				for(int j = column; j < (column + 3); j++)
+				{
+					// Calculate the current cell we are looking at
+					int currentCellPosition = (SUDOKU_SIZE * i) + j;
+
+					// Go through the remaining possibilities in the possibleNumsArray
+					for(int num = 0; num < SUDOKU_SIZE; num++)
+					{
+						// If the number in the current cell position is still a possibility...
+						if(possibleNumsArray[currentCellPosition][num])
+						{
+							// Add to that number's count
+							blockNumberCount[num]++;
+
+							// Hold the cell position of that number
+							numberPosition[num] = currentCellPosition;
+						}
+					}
+				}
+			}
+
+			// Check to see if there is a number that only has one instance in the current block
+			for(int num = 0; num < SUDOKU_SIZE; num++)
+			{
+				// If the cell only has one instance of a number...
+				if(blockNumberCount[num] == 1)
+				{
+					// If the number is already on the board, skip this process
+					if(gameBoardArray[row][column] != (num + 1))
+					{
+						// Go through the possibleNumsArray and remove all other possibilities from the cell.
+						for(int i = 0; i < SUDOKU_SIZE; i++)
+						{
+							// Don't remove the number we want to keep
+							if(num != i)
+							{
+								possibleNumsArray[numberPosition[num]][i] = false;
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+// Find the cells that are solved and mark them as such in the game board and the possible numbers array
 int markCellsAsSolved(int gameBoardArray[][SUDOKU_SIZE], bool possibleNumsArray[][SUDOKU_SIZE], int numberCountArray[])
 {
 	int cellsSolved = 0,
