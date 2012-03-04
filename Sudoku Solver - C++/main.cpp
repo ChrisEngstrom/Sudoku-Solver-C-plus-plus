@@ -26,7 +26,6 @@ void clearSolvedNumFromRow(bool possibleNumsArray[][SUDOKU_SIZE], int currentRow
 void clearSolvedNumFromColumn(bool possibleNumsArray[][SUDOKU_SIZE], int currentColumn, int currentCell, int cellValue);
 void clearSolvedNumFromBlock(bool possibleNumsArray[][SUDOKU_SIZE], int currentRow, int currentColumn, int currentCell, int cellValue);
 void findOnlyPossibleNumbers(int gameBoardArray[][SUDOKU_SIZE], bool possibleNumsArray[][SUDOKU_SIZE]);
-void findNextNumber(int gameBoardArray[][SUDOKU_SIZE], int numberCountArray[], int &numsRemaining);
 
 // Maintenance functions
 int markCellsAsSolved(int gameBoardArray[][SUDOKU_SIZE], bool possibleNumsArray[][SUDOKU_SIZE], int numberCountArray[]);
@@ -152,8 +151,6 @@ int main ()
 
 		// Decrease the count of cells remaining by how many cells were solved this pass
 		cellsRemaining -= numberOfCellsSolved;
-
-		//findNextNumber(gameBoard, numberCount, cellsRemaining);
 
 		// Print the current state
 		printGameBoard(gameBoard);
@@ -517,12 +514,4 @@ int markCellsAsSolved(int gameBoardArray[][SUDOKU_SIZE], bool possibleNumsArray[
 	}
 
 	return cellsSolved;
-}
-
-// Find the next number in the puzzle
-void findNextNumber(int gameBoardArray[][SUDOKU_SIZE], int numberCountArray[], int &numsRemaining)
-{
-
-
-	numsRemaining--;
 }
